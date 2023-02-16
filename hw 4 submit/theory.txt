@@ -1,0 +1,33 @@
+a. R(A,B,C,D,E) with functional dependencies D → B, CE → A. 
+Decomposed:
+	1. From dependency D -> B, D+ = {B,D} does not meet BCNF, 
+	needs to be decomposed by splitting table.
+	R1 = {B,D} with leftovers in R2 {A,C,D,E} with D as common link.
+
+	2. R1 now meets BCNF, but R2 doesn't: CE+ = {A,C,E} 
+	so it needs to be decomposed by splitting table.
+	R3 = {A,C,E} and R4 ={C,D,E} with C,E as common link, both tables now meet BCNF
+
+	3. Final answer: R1 = {B,D} ; R3 = {A,C,E} ; R4 = {C,D,E}
+
+b. S(A,B,C,D,E) with functional dependencies A → E, BC → A, DE → B.
+Decomposed:
+	1. From dependency A -> E, A+ = {A,E} does not meet BCNF, 
+	needs to be decomposed by splitting table.
+	S1 = {A,E} with leftovers in R2 {A,B,C,D} with A as common link.
+	
+	2. S1 now meets BCNF, but S2 doesn't: BC+ = {A,B,C}
+	so it needs to be decomposed by splitting table.
+	S3 = {A,B,C} and S4 = {A,B,D} with B,C as common link, both tables now meet BCNF
+	
+	3. Final answer: S1 = {A,E} ; S3 = {A,B,C} ; S4 = {A,B,D}
+
+R(A,B,C,D)
+c. All subsets of {A,B,C,D} are closed.
+	A->A, B->B, C->C, D->D
+
+d. The only closed subsets of {A,B,C,D} are {} and {A,B,C,D}.
+	A->B, B->C, C->D, D->A
+
+e. The only closed subsets of {A,B,C,D} are {}, {B,C}, and {A,B,C,D}.
+	B->C, C->D, D->A,B,C A->B,C,D
