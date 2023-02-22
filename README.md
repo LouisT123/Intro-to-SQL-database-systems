@@ -1,2 +1,2 @@
 # Intro-to-SQL-database-systems
-My various class work at UW
+Includes my various SQL database assignments at UW
