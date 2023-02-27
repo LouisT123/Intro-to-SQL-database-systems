@@ -6,18 +6,18 @@ import scheduler.util.Util;
 import java.sql.*;
 import java.util.Arrays;
 
-public class Patient {
+public class Caregiver {
     private final String username;
     private final byte[] salt;
     private final byte[] hash;
 
-    private Patient(Patient.PatientBuilder builder) {
+    private Caregiver(CaregiverBuilder builder) {
         this.username = builder.username;
         this.salt = builder.salt;
         this.hash = builder.hash;
     }
 
-    private Patient(Patient.PatientGetter getter) {
+    private Caregiver(CaregiverGetter getter) {
         this.username = getter.username;
         this.salt = getter.salt;
         this.hash = getter.hash;
@@ -40,9 +40,9 @@ public class Patient {
         ConnectionManager cm = new ConnectionManager();
         Connection con = cm.createConnection();
 
-        String addPatient = "INSERT INTO Patients VALUES (? , ?, ?)";
+        String addCaregiver = "INSERT INTO Caregivers VALUES (? , ?, ?)";
         try {
-            PreparedStatement statement = con.prepareStatement(addPatient);
+            PreparedStatement statement = con.prepareStatement(addCaregiver);
             statement.setString(1, this.username);
             statement.setBytes(2, this.salt);
             statement.setBytes(3, this.hash);
@@ -71,40 +71,40 @@ public class Patient {
         }
     }
 
-    public static class PatientBuilder {
+    public static class CaregiverBuilder {
         private final String username;
         private final byte[] salt;
         private final byte[] hash;
 
-        public PatientBuilder(String username, byte[] salt, byte[] hash) {
+        public CaregiverBuilder(String username, byte[] salt, byte[] hash) {
             this.username = username;
             this.salt = salt;
             this.hash = hash;
         }
 
-        public Patient build() {
-            return new Patient(this);
+        public Caregiver build() {
+            return new Caregiver(this);
         }
     }
 
-    public static class PatientGetter {
+    public static class CaregiverGetter {
         private final String username;
         private final String password;
         private byte[] salt;
         private byte[] hash;
 
-        public PatientGetter(String username, String password) {
+        public CaregiverGetter(String username, String password) {
             this.username = username;
             this.password = password;
         }
 
-        public Patient get() throws SQLException {
+        public Caregiver get() throws SQLException {
             ConnectionManager cm = new ConnectionManager();
             Connection con = cm.createConnection();
 
-            String getPatient = "SELECT Salt, Hash FROM Patients WHERE Username = ?";
+            String getCaregiver = "SELECT Salt, Hash FROM Caregivers WHERE Username = ?";
             try {
-                PreparedStatement statement = con.prepareStatement(getPatient);
+                PreparedStatement statement = con.prepareStatement(getCaregiver);
                 statement.setString(1, this.username);
                 ResultSet resultSet = statement.executeQuery();
                 while (resultSet.next()) {
@@ -119,7 +119,7 @@ public class Patient {
                     } else {
                         this.salt = salt;
                         this.hash = hash;
-                        return new Patient(this);
+                        return new Caregiver(this);
                     }
                 }
                 return null;
