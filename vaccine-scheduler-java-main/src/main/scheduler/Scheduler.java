@@ -24,7 +24,7 @@ public class Scheduler {
     private static Caregiver currentCaregiver = null;
     private static Patient currentPatient = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         // printing greetings text
         System.out.println();
         System.out.println("Welcome to the COVID-19 Vaccine Reservation Scheduling Application!");
@@ -323,7 +323,13 @@ public class Scheduler {
         String stringDate = tokens[1];
         Date d = Date.valueOf(tokens[1]);
         String vaccineName = tokens[2];
-
+        //TODO FIX
+        try {
+            Vaccine vaccineAmt = new Vaccine.VaccineGetter(vaccineName).get();
+        } catch (SQLException e) {
+            System.out.println("error getting vaccine name");
+        }
+        int dosesAmount = 0;
 
         ConnectionManager cm = new ConnectionManager();
         Connection c = cm.createConnection();
@@ -331,6 +337,8 @@ public class Scheduler {
         String appointment_id = d + currentPatient.getUsername();
         String findCaregiver = "SELECT Username FROM Availabilities WHERE Time = ? ORDER BY Username ASC;";
         String findVaccine = "SELECT Doses FROM Vaccines WHERE Name = ?;";
+        String setAppointment = "INSERT INTO Appointment VALUES (? , ? , ? , ? , ? );";
+        String removeAvail = "DELETE FROM Appointment WHERE Time = ? AND Username = ?;";
         try {
             PreparedStatement caregiver = c.prepareStatement(findCaregiver);
             caregiver.setDate(1, d);
@@ -342,13 +350,14 @@ public class Scheduler {
             PreparedStatement vaccine = c.prepareStatement(findVaccine);
             vaccine.setString(1, vaccineName);
             ResultSet resultSetB = vaccine.executeQuery();
+            while (resultSetB.next())
+            {
+                dosesAmount = resultSetB.getInt("Doses");
+            }
             if (!resultSetB.next())
             {
                 System.out.println("Not enough available doses!");
             }
-
-        String setAppointment = "INSERT INTO Appointments (? , ? , ? , ? , ? );";
-        String removeAvail = "DELETE FROM Appointments WHERE Time = ? AND Username = ?;";
 
             //create appointment in db
             while (resultSetA.next()) {
@@ -369,6 +378,9 @@ public class Scheduler {
                 deleteAppt.setString(1, caregiverName);
                 deleteAppt.setDate(2, d);
                 deleteAppt.executeUpdate();
+
+                //need to decreaseavailabledoses here
+
             }
         } catch (SQLException e) {
             System.out.println("Please try again: sql exception");
@@ -457,7 +469,7 @@ public class Scheduler {
             System.out.println("Please login as a caregiver or patient first!");
         }
         // check 2: the length for tokens need to be exactly 2 to include all information (with the operation name)
-        if (tokens.length != 2) {
+        if (tokens.length != 1) {
             System.out.println("Please try again!");
         }
         if (currentCaregiver != null)
@@ -465,7 +477,7 @@ public class Scheduler {
             ConnectionManager cm = new ConnectionManager();
             Connection c = cm.createConnection();
 
-            String caregiverLookup = "SELECT appointment_id, vaccineName, Time, patientName FROM Appointments WHERE caregiverName = ? ORDER BY appointment_id ASC;";
+            String caregiverLookup = "SELECT appointmentID, vaccineName, Time, patientName FROM Appointments WHERE caregiverName = ? ORDER BY appointment_id ASC;";
             try {
                 PreparedStatement caregiverSearch = c.prepareStatement(caregiverLookup);
                 caregiverSearch.setString(1, currentCaregiver.getUsername());
@@ -473,14 +485,15 @@ public class Scheduler {
                 System.out.println("All appointments here: ");
                 while (caregiverResult.next())
                 {
-                    String appointment_id = caregiverResult.getString("appointment_id");
+                    String appointment_id = caregiverResult.getString("appointmentID");
                     String vaccineName = caregiverResult.getString("vaccineName");
                     Date Time = caregiverResult.getDate("Time");
                     String patientName = caregiverResult.getString("patientName");
                     System.out.println("Appointment ID: " + appointment_id + " Vaccine name: " + vaccineName + " Time: " + Time + " Patient name: " + patientName);
                 }
             } catch (SQLException e) {
-                System.out.println("Please try again: sql exception");
+                System.out.println("c-error accessing info");
+                e.printStackTrace();
             } finally {
                 cm.closeConnection();
             }
@@ -492,7 +505,7 @@ public class Scheduler {
             ConnectionManager cm = new ConnectionManager();
             Connection c = cm.createConnection();
 
-            String patientLookup = "SELECT appointment_id, vaccineName, Time, caregiverName FROM Appointments WHERE patientName = ? ORDER BY appointment_id ASC;";
+            String patientLookup = "SELECT appointmentID, vaccineName, Time, caregiverName FROM Appointments WHERE patientName = ? ORDER BY appointment_id ASC;";
             try {
                 PreparedStatement patientSearch = c.prepareStatement(patientLookup);
                 patientSearch.setString(1, currentPatient.getUsername());
@@ -500,14 +513,15 @@ public class Scheduler {
                 System.out.println("All appointments here: ");
                 while (patientResult.next())
                 {
-                    String appointment_id = patientResult.getString("appointment_id");
+                    String appointment_id = patientResult.getString("appointmentID");
                     String vaccineName = patientResult.getString("vaccineName");
                     Date Time = patientResult.getDate("Time");
                     String caregiverName = patientResult.getString("caregiverName");
                     System.out.println("Appointment ID: " + appointment_id + " Vaccine name: " + vaccineName + " Time: " + Time + " Caregiver name: " + caregiverName);
                 }
             } catch (SQLException e) {
-                System.out.println("Please try again: sql exception");
+                System.out.println("p-error accessing info");
+                e.printStackTrace();
             } finally {
                 cm.closeConnection();
             }
