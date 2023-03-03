@@ -255,7 +255,6 @@ public class Scheduler {
 
     private static void searchCaregiverSchedule(String[] tokens) {
         // TODO: Part 2
-        // upload_availability <date>
         // check 1: check if the current logged-in user is a caregiver or patient
         if ((currentCaregiver == null) && (currentPatient == null)) {
             System.out.println("Please login as a caregiver or patient first!");
@@ -311,7 +310,6 @@ public class Scheduler {
 
     private static void reserve(String[] tokens) {
         // TODO: Part 2
-        // add_doses <vaccine> <number>
         // check 1: check if the current logged-in user is a patient
         if (currentPatient == null) {
             System.out.println("Please login as a patient first!");
@@ -322,7 +320,62 @@ public class Scheduler {
             System.out.println("Please try again!");
             return;
         }
-        //TODO HERE
+        String stringDate = tokens[1];
+        Date d = Date.valueOf(tokens[1]);
+        String vaccineName = tokens[2];
+
+
+        ConnectionManager cm = new ConnectionManager();
+        Connection c = cm.createConnection();
+
+        String appointment_id = d + currentPatient.getUsername();
+        String findCaregiver = "SELECT Username FROM Availabilities WHERE Time = ? ORDER BY Username ASC;";
+        String findVaccine = "SELECT Doses FROM Vaccines WHERE Name = ?;";
+        try {
+            PreparedStatement caregiver = c.prepareStatement(findCaregiver);
+            caregiver.setDate(1, d);
+            ResultSet resultSetA = caregiver.executeQuery();
+            if (!resultSetA.next())
+            {
+                System.out.println("No caregiver is available!");
+            }
+            PreparedStatement vaccine = c.prepareStatement(findVaccine);
+            vaccine.setString(1, vaccineName);
+            ResultSet resultSetB = vaccine.executeQuery();
+            if (!resultSetB.next())
+            {
+                System.out.println("Not enough available doses!");
+            }
+
+        String setAppointment = "INSERT INTO Appointments (? , ? , ? , ? , ? );";
+        String removeAvail = "DELETE FROM Appointments WHERE Time = ? AND Username = ?;";
+
+            //create appointment in db
+            while (resultSetA.next()) {
+                String caregiverName = resultSetA.getString("Username");
+
+                PreparedStatement appt = c.prepareStatement(setAppointment);
+                appt.setString(1, appointment_id);
+                appt.setString(2, caregiverName);
+                appt.setString(3, currentPatient.getUsername());
+                appt.setString(4, vaccineName);
+                appt.setDate(5, d);
+                appt.executeUpdate();
+                System.out.println("Appointment scheduled");
+                System.out.println("AppointmentID: " + appointment_id);
+                System.out.println("Caregiver Username: " + caregiverName);
+            //delete avail
+                PreparedStatement deleteAppt = c.prepareStatement(removeAvail);
+                deleteAppt.setString(1, caregiverName);
+                deleteAppt.setDate(2, d);
+                deleteAppt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.out.println("Please try again: sql exception");
+        } finally {
+            cm.closeConnection();
+        }
+
     }
 
     private static void uploadAvailability(String[] tokens) {
@@ -352,7 +405,6 @@ public class Scheduler {
     }
 
     private static void cancel(String[] tokens) {
-        // TODO: Extra credit
     }
 
     private static void addDoses(String[] tokens) {
