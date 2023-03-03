@@ -452,9 +452,80 @@ public class Scheduler {
 
     private static void showAppointments(String[] tokens) {
         // TODO: Part 2
+        // check 1: check if the current logged-in user is a caregiver or patient
+        if ((currentCaregiver == null) && (currentPatient == null)) {
+            System.out.println("Please login as a caregiver or patient first!");
+        }
+        // check 2: the length for tokens need to be exactly 2 to include all information (with the operation name)
+        if (tokens.length != 2) {
+            System.out.println("Please try again!");
+        }
+        if (currentCaregiver != null)
+        {
+            ConnectionManager cm = new ConnectionManager();
+            Connection c = cm.createConnection();
+
+            String caregiverLookup = "SELECT appointment_id, vaccineName, Time, patientName FROM Appointments WHERE caregiverName = ? ORDER BY appointment_id ASC;";
+            try {
+                PreparedStatement caregiverSearch = c.prepareStatement(caregiverLookup);
+                caregiverSearch.setString(1, currentCaregiver.getUsername());
+                ResultSet caregiverResult = caregiverSearch.executeQuery();
+                System.out.println("All appointments here: ");
+                while (caregiverResult.next())
+                {
+                    String appointment_id = caregiverResult.getString("appointment_id");
+                    String vaccineName = caregiverResult.getString("vaccineName");
+                    Date Time = caregiverResult.getDate("Time");
+                    String patientName = caregiverResult.getString("patientName");
+                    System.out.println("Appointment ID: " + appointment_id + " Vaccine name: " + vaccineName + " Time: " + Time + " Patient name: " + patientName);
+                }
+            } catch (SQLException e) {
+                System.out.println("Please try again: sql exception");
+            } finally {
+                cm.closeConnection();
+            }
+
+        }
+        //patient
+        if (currentPatient != null)
+        {
+            ConnectionManager cm = new ConnectionManager();
+            Connection c = cm.createConnection();
+
+            String patientLookup = "SELECT appointment_id, vaccineName, Time, caregiverName FROM Appointments WHERE patientName = ? ORDER BY appointment_id ASC;";
+            try {
+                PreparedStatement patientSearch = c.prepareStatement(patientLookup);
+                patientSearch.setString(1, currentPatient.getUsername());
+                ResultSet patientResult = patientSearch.executeQuery();
+                System.out.println("All appointments here: ");
+                while (patientResult.next())
+                {
+                    String appointment_id = patientResult.getString("appointment_id");
+                    String vaccineName = patientResult.getString("vaccineName");
+                    Date Time = patientResult.getDate("Time");
+                    String caregiverName = patientResult.getString("caregiverName");
+                    System.out.println("Appointment ID: " + appointment_id + " Vaccine name: " + vaccineName + " Time: " + Time + " Caregiver name: " + caregiverName);
+                }
+            } catch (SQLException e) {
+                System.out.println("Please try again: sql exception");
+            } finally {
+                cm.closeConnection();
+            }
+        }
+
     }
 
     private static void logout(String[] tokens) {
         // TODO: Part 2
+        if (tokens.length != 1)
+        {
+            System.out.println("Please try again");
+        }
+        if ((currentCaregiver == null) && (currentPatient == null)) {
+            System.out.println("Please login as a caregiver or patient first!");
+        }
+        currentPatient = null;
+        currentCaregiver = null;
+        System.out.println("logged out");
     }
 }
