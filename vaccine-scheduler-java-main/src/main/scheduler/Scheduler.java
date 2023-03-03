@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Date;
+import java.util.Arrays;
 
 public class Scheduler {
 
@@ -254,10 +255,74 @@ public class Scheduler {
 
     private static void searchCaregiverSchedule(String[] tokens) {
         // TODO: Part 2
+        // upload_availability <date>
+        // check 1: check if the current logged-in user is a caregiver or patient
+        if ((currentCaregiver == null) && (currentPatient == null)) {
+            System.out.println("Please login as a caregiver or patient first!");
+            return;
+        }
+        // check 2: the length for tokens need to be exactly 2 to include all information (with the operation name)
+        if (tokens.length != 2) {
+            System.out.println("Please try again!");
+            return;
+        }
+        //date format
+        String stringDate = tokens[1];
+        Date d = Date.valueOf(tokens[1]);
+
+        //need to connect to database to find caregivers/patients
+        ConnectionManager cm = new ConnectionManager();
+        Connection c = cm.createConnection();
+
+        //display all caregivers and vaccine doses sql
+        String findCaregiver = "SELECT Username FROM Availabilities WHERE Time = ? ORDER BY Username ASC;";
+        String findDoses = "SELECT * FROM Vaccines;";
+        try {
+            //caregivers
+            PreparedStatement caregiverStatement = c.prepareStatement(findCaregiver);
+            caregiverStatement.setDate(1, d);
+            ResultSet resultSet = caregiverStatement.executeQuery();
+            if (resultSet == null) {
+                System.out.println("no caregiver found in database");
+                return;
+            }
+            System.out.println("Caregivers: " );
+            while (resultSet.next()) {
+                String caregiverName = resultSet.getString("Username");
+                System.out.println(caregiverName);
+            }
+
+            //vaccines
+            PreparedStatement vaccineStatement = c.prepareStatement(findDoses);
+            ResultSet resultSet2 = vaccineStatement.executeQuery();
+            System.out.println("Vaccines: ");
+            while (resultSet2.next()) {
+                String vaccineName = resultSet2.getString("Name");
+                int vaccineDoses = resultSet2.getInt("Doses");
+                System.out.println("Vaccine Name: " + vaccineName + " Available Doses: " + vaccineDoses);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Please try again: sql exception");
+        } finally {
+            cm.closeConnection();
+        }
     }
 
     private static void reserve(String[] tokens) {
         // TODO: Part 2
+        // add_doses <vaccine> <number>
+        // check 1: check if the current logged-in user is a patient
+        if (currentPatient == null) {
+            System.out.println("Please login as a patient first!");
+            return;
+        }
+        // check 2: the length for tokens need to be exactly 3 to include all information (with the operation name)
+        if (tokens.length != 3) {
+            System.out.println("Please try again!");
+            return;
+        }
+        //TODO HERE
     }
 
     private static void uploadAvailability(String[] tokens) {
@@ -273,6 +338,7 @@ public class Scheduler {
             return;
         }
         String date = tokens[1];
+
         try {
             Date d = Date.valueOf(date);
             currentCaregiver.uploadAvailability(d);
