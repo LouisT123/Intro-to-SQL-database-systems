@@ -326,9 +326,13 @@ public class Scheduler {
         String vaccineName = tokens[2];
         String caregiver;
 
+        // set vaccine
+        Vaccine vaccine = null;
         // check caregiver availability
         ConnectionManager cm = new ConnectionManager();
         Connection con = cm.createConnection();
+
+
 
         try {
             Date d1 = Date.valueOf(date);
@@ -344,8 +348,8 @@ public class Scheduler {
             resultSet.next();
             caregiver = resultSet.getString("Username");
 
-            // set vaccine
-            Vaccine vaccine = null;
+            String removeAvail = "DELETE FROM Availabilities WHERE Time = ? AND Username = ?;";
+
             try {
                 vaccine = new Vaccine.VaccineGetter(vaccineName).get();
 
@@ -363,7 +367,7 @@ public class Scheduler {
             }
 
             else {
-                String removeAvail = "DELETE FROM Appointment WHERE Time = ? AND Username = ?;";
+
                 try {
 
                     int appointment_id = new Random().nextInt();
@@ -371,39 +375,25 @@ public class Scheduler {
 
                     Appointment appointment = new Appointment.AppointmentBuilder
                             (appointment_id,vaccineName, d1, caregiver, currentPatient.getUsername()).build();
-                     /*
-                    PreparedStatement statement1 = con.prepareStatement(makeappointment);
-                    statement1.setInt(1, id);
-                    statement1.setString(2, caregiver);
-                    statement1.setString(3, vaccineName);
-                    statement1.setString(4, currentPatient.getUsername());
-
-                    statement1.setDate(5, d1);
-
-                    statement1.executeUpdate();
-                    */
                     appointment.saveToDB();
                     System.out.println("Appointment Scheduled.");
                     System.out.println("Caregiver: "+ caregiver +", Appointment id: "+ appointment_id);
                     // remove availability and dose
-                    /*
-                    PreparedStatement deleteAppt = con.prepareStatement(removeAvail);
-                    deleteAppt.setString(1, caregiver);
-                    deleteAppt.setDate(2, d1);
-                    deleteAppt.executeUpdate();
+                    PreparedStatement delete = con.prepareStatement(removeAvail);
+                    delete.setDate(1, d1);
+                    delete.setString(2, caregiver);
+                    delete.executeUpdate();
 
-                     vaccine.decreaseAvailableDoses(1);
-                    //currentPatient.removeAvailability(d1,caregiver);
-                    // vaccine dose -1
-                    //vaccine.decreasoneDose();
-                */
+                    vaccine.decreaseAvailableDoses(1);
+
+
                 } catch (SQLException e) {
-                    System.out.println("Error during creating appointment row");
-                    throw new SQLException();
+                    System.out.println("Error during creating appointment");
+                    e.printStackTrace();
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Please try again: sql exception");
+            System.out.println("Please try again");
             e.printStackTrace();
         } finally {
             cm.closeConnection();
