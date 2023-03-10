@@ -9,6 +9,7 @@ WHERE Y.name = 'Peru'
 ORDER BY city;
 
 --results: 30 rows of city
+--duration .091 sec
 /*
 { "city": "Abancay" }
 { "city": "Arequipa" }

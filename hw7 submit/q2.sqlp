@@ -9,6 +9,7 @@ SELECT Y.name AS country, Y.population AS population, ARRAY_COUNT(religions) as 
                       ELSE [Y.religions] END)
  ORDER BY country;
 --results: 238 rows of num_religions, country, and population
+--duration .098 sec
 /*
 { "num_religions": 1, "country": "Afghanistan", "population": "22664136" }
 { "num_religions": 3, "country": "Albania", "population": "3249136" }
