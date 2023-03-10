@@ -1,0 +1,43 @@
+USE geo;
+
+SELECT U.name AS city
+  FROM world AS X, X.mondial.country AS Y, Y.province AS Z,
+       (CASE WHEN is_array(Z.city)
+             THEN Z.city
+             ELSE [Z.city] END) AS U
+WHERE Y.name = 'Peru'
+ORDER BY city;
+
+--results: 30 rows of city
+/*
+{ "city": "Abancay" }
+{ "city": "Arequipa" }
+{ "city": "Ayacucho" }
+{ "city": "Cajamarca" }
+{ "city": "Callao" }
+{ "city": "Cerro de Pasco" }
+{ "city": "Chachapoyas" }
+{ "city": "Chiclayo" }
+{ "city": "Chimbote" }
+{ "city": "Chincha Alta" }
+{ "city": "Cuzco" }
+{ "city": "Huancavelica" }
+{ "city": "Huancayo" }
+{ "city": "Huanuco" }
+{ "city": "Huaraz" }
+{ "city": "Ica" }
+{ "city": "Iquitos" }
+{ "city": "Juliaca" }
+{ "city": "Lima" }
+{ "city": "Moquegua" }
+{ "city": "Moyobamba" }
+{ "city": "Piura" }
+{ "city": "Pucallpa" }
+{ "city": "Puerto Maldonado" }
+{ "city": "Puno" }
+{ "city": "Sullana" }
+{ "city": "Tacna" }
+{ "city": "Talara" }
+{ "city": "Trujillo" }
+{ "city": "Tumbes" }
+*/
